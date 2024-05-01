@@ -240,12 +240,11 @@ public class KMeans {
         public void setup(Context context) throws IOException, InterruptedException {
             mos = new MultipleOutputs<>(context);
         }
-    
 
         public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             Double sum_x = 0.0;
             Double sum_y = 0.0;
-            int count = 1;
+            int count = 0;
 
             // Sum the counts for the current cluster
             for (Text value : values){
