@@ -34,7 +34,7 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 public class KMeans {
 
     // Centroids of k clusters.
-    public static ArrayList<Double[]> centroids = new  ArrayList<>();
+    public static ArrayList<Double[]> centroids = new ArrayList<>();
       
     public static void init_random_centroids(int k) throws IOException {
         // Generate a seed
@@ -69,7 +69,7 @@ public class KMeans {
 
         if (fs.exists(centroid_file_path)) {
 
-            // Clear all current centroids
+            // Clear current centroids
             centroids.clear();
 
             try (FSDataInputStream input_stream = fs.open(centroid_file_path);
@@ -77,11 +77,9 @@ public class KMeans {
                 BufferedReader reader = new BufferedReader(input_stream_reader)) {
         
                 String line;
-                System.out.println("********FILE CONTENT**********");
 
                 while ((line = reader.readLine()) != null) {
                     
-                    System.out.println(line);
                     String[] parts = line.trim().split("\\s+");
                     Double[] centroid = new Double[2];
 
@@ -96,7 +94,6 @@ public class KMeans {
         } else {
             System.out.println("File doesn't exist in HDFS.");
         }
-
         System.out.println("********FINISH READING CENTROIDS**********");
     }
 
@@ -117,8 +114,8 @@ public class KMeans {
             }
 
             double distance = Math.sqrt(sum);
-
             System.out.println("Distance: " + distance);
+
             if (distance > threshold) {
                 result = false;
             }
@@ -148,7 +145,6 @@ public class KMeans {
 
     public static void rename_output_files(String output_dir) throws IOException
     {
-
         System.out.println("********RENAME OUTPUT FILE FUNCTION*********");
 
         FileSystem hdfs = FileSystem.get(new Configuration());
@@ -200,7 +196,6 @@ public class KMeans {
                 mapper_centroids.add(centroid);
             }
         }
-
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 
@@ -264,7 +259,6 @@ public class KMeans {
 
             Double centroid_x = sum_x / count;
             Double centroid_y = sum_y / count;
-
             String centroid = centroid_x + " " + centroid_y;
 	    
             mos.write("centroid", new Text(centroid), key, "task_2_1.clusters");
@@ -274,7 +268,6 @@ public class KMeans {
         public void cleanup(Context context) throws IOException, InterruptedException {
             mos.close();
         }
-
     }
 
     // Config a map reduce job
@@ -288,7 +281,6 @@ public class KMeans {
 
         FileSystem fs = FileSystem.get(conf);
         Job job = Job.getInstance(conf, "KMeans Clustering");
-
         job.setJarByClass(KMeans.class);
         
         // Config Map phase
@@ -320,25 +312,6 @@ public class KMeans {
         }
     }
 
-    // Run an interation
-    public static void run(int iteration, int k, String input_file, String output_file) throws IOException {
-
-        if (iteration == 0) {
-            // Generate random centroids and write them to file
-            init_random_centroids(k);
-        }
-
-        try{
-            run_map_reduce_job(k, input_file, output_file);
-            read_centroids(output_file + "/task_2_1.clusters", k);
-            
-        }catch (Exception e){
-            System.out.println(e);
-            System.out.println("ERROR");
-        }
-       
-    }
-
     // args: 
     // - input_path
     // - output_path
@@ -365,33 +338,39 @@ public class KMeans {
             System.out.println("+++++++++++++++++");
             System.out.println("Iteration: " + iteration);
 
-            if (iteration > 0){
-                old_centroids = new  ArrayList<>(centroids);
-            }
-			run(iteration, k, input_file, output_file);
-
-            if (iteration > 0){
-                new_centroids = new  ArrayList<>(centroids);
-
-                System.out.println("Old centroid");
-                for (int i= 0; i < old_centroids.size(); i++){
-                    System.out.println(old_centroids.get(i)[0] + " " + old_centroids.get(i)[1]);
-                }
-
-                System.out.println("New centroid");
-                for (int i= 0; i < new_centroids.size(); i++){
-                    System.out.println(new_centroids.get(i)[0] + " " + new_centroids.get(i)[1]);
-                }
-
-                if (has_converged(old_centroids, new_centroids,0.5) == true) {
-                    break;
-                }
+            if (iteration == 0) {
+                // Generate random centroids and write them to file
+                init_random_centroids(k);
             }
 
-            iteration ++;
-           
+            old_centroids = new  ArrayList<>(centroids);
+
+            try{
+                run_map_reduce_job(k, input_file, output_file);
+                read_centroids(output_file + "/task_2_1.clusters", k);
+                
+            }catch (Exception e){
+                System.out.println(e);
+                System.out.println("ERROR");
+            }
+
+            new_centroids = new  ArrayList<>(centroids);
+
+            System.out.println("Old centroid");
+            for (int i= 0; i < old_centroids.size(); i++){
+                System.out.println(old_centroids.get(i)[0] + " " + old_centroids.get(i)[1]);
+            }
+
+            System.out.println("New centroid");
+            for (int i= 0; i < new_centroids.size(); i++){
+                System.out.println(new_centroids.get(i)[0] + " " + new_centroids.get(i)[1]);
+            }
+
+            if (has_converged(old_centroids, new_centroids,0.5) == true) {
+                break;
+            }
+
+            iteration ++;       
 		}
-
-      }
-    
+    }
 }

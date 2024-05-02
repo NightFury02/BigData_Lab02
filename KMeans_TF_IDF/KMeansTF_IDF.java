@@ -35,7 +35,6 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
-
 public class KMeansTF_IDF {
 
     public static ArrayList<String> centroids = new ArrayList<>();
@@ -43,8 +42,9 @@ public class KMeansTF_IDF {
     public static ArrayList<String> top_terms = new ArrayList<>();
 
     // Function to get k random centroids
-    public static void init_random_centroids(int k, String input_path) throws IOException
+    public static ArrayList<String> init_random_centroids(int k, String input_path) throws IOException
     {
+        ArrayList<String> centroids = new ArrayList<>();
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
         Path input_file_path = new Path("hdfs://localhost:9000" + input_path);
@@ -77,6 +77,7 @@ public class KMeansTF_IDF {
                 System.out.println(centroids.get(i));
             }
         }
+        return centroids;
     }
 
     public static String centroids_to_string()
@@ -86,6 +87,7 @@ public class KMeansTF_IDF {
         for (String centroid : centroids) {
             centroids_string.append(centroid).append(";");
         }
+        centroids_string.deleteCharAt(centroids_string.length() - 1);
         
         return centroids_string.toString();
     }
@@ -611,12 +613,6 @@ public class KMeansTF_IDF {
 
     // Run an interation
     public static void run(int iteration, int k, String input_file, String output_file) throws Exception {
-
-        if (iteration == 0) {
-            // Generate random centroids and write them to file
-            init_random_centroids(k, input_file);
-        }
-
         try{
             run_map_reduce_job( iteration, k, input_file, output_file);
             read_centroids(output_file + "/task_2_2.clusters", k);
@@ -654,18 +650,20 @@ public class KMeansTF_IDF {
             System.out.println("+++++++++++++++++");
             System.out.println("Iteration: " + iteration);
 
-            if (iteration > 0){
-                old_centroids = new  ArrayList<>(centroids);
+            if (iteration == 0) {
+                // Generate random centroids
+                centroids = init_random_centroids(k, converted_input_file);
             }
+
+            old_centroids = new  ArrayList<>(centroids);
 
             run(iteration, k, converted_input_file, output_file);
 
-            if (iteration > 0){
-                new_centroids = new  ArrayList<>(centroids);
+            new_centroids = new  ArrayList<>(centroids);
 
-                if (has_converged(old_centroids, new_centroids,0.95) == true) {
-                    break;
-                }
+            if (has_converged(old_centroids, new_centroids,0.95) == true) {
+                break;
+            
             }
             iteration ++;
         }
