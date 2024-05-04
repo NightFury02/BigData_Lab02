@@ -39,6 +39,7 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
 public class task2_3 {
     public static String fs_default_path = "hdfs://localhost:9000";
+    public static String input_file_name = "TFIDF.txt-r-00000";
     public static Set<String> centroids = new HashSet<>();
     public static ArrayList<Double> iter_loss = new ArrayList<>();
     public static ArrayList<String> top_terms = new ArrayList<>();
@@ -513,6 +514,7 @@ public class task2_3 {
             String[] doc_term_tfidf = value.toString().split("\\s+");
             Map<Integer, Double> term_tfidf = parse_term_tfidf(doc_term_tfidf[1]);
             double max_similarity = -1;
+            // double max_similarity = Double.MAX_VALUE;
             int cluster = -1;
 
             for (int cluster_id = 0; cluster_id < mapper_centroids.size(); cluster_id++) {
@@ -520,6 +522,7 @@ public class task2_3 {
                 Map<Integer, Double> centroid = mapper_centroids.get(cluster_id);
 
                 double similarity = task2_3.cosine_similarity(term_tfidf, centroid);
+                // double similarity = sum_squares(term_tfidf, centroid);
 
                 if (similarity > max_similarity) {
                     cluster = cluster_id;
@@ -565,7 +568,7 @@ public class task2_3 {
         String centroids_string = centroids_to_string();
         conf.set("centroids", centroids_string);
 
-        String converted_input_file = input_file + "/tfidf.txt";
+        String converted_input_file = input_file + "/" + input_file_name;
         ArrayList<String> centroid_weight = new ArrayList<>();
 
         FileSystem fs = FileSystem.get(conf);
@@ -1240,8 +1243,7 @@ public class task2_3 {
         int max_iterations = Integer.parseInt(args[3]);
         Double l = Double.parseDouble(args[4]);
 
-        String converted_input_file = input_file + "/tfidf.txt";
-        // convert_file(input_file + "/input.mtx", converted_input_file);
+        String converted_input_file = input_file + "/" + input_file_name;
 
         centroids.addAll(init_random_centroid(1, converted_input_file));
         Double loss = find_cost(converted_input_file, output_file);

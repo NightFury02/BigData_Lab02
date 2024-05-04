@@ -37,6 +37,7 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
 public class task2_2 {
     public static String fs_default_path = "hdfs://localhost:9000";
+    public static String input_file_name = "TFIDF.txt-r-00000";
     public static ArrayList<String> centroids = new ArrayList<>();
     public static ArrayList<Double> iter_loss = new ArrayList<>();
     public static ArrayList<String> top_terms = new ArrayList<>();
@@ -569,7 +570,7 @@ public class task2_2 {
         ArrayList<String> new_centroids = new  ArrayList<>();
 
         // Convert the input file to a desired format.
-        String converted_input_file = input_file + "/tfidf.txt";
+        String converted_input_file = input_file +"/" +input_file_name;
         // convert_file(input_file, converted_input_file );
 
         int iteration = 0;
