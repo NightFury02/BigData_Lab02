@@ -129,7 +129,7 @@ public class task1_4_3_2 {
         job.setReducerClass(IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-        job.getConfiguration().set("mapreduce.output.basename", "TFIDF.mtx");
+        job.getConfiguration().set("mapreduce.output.basename", "TFIDF.txt");
         FileInputFormat.setInputDirRecursive(job, true);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         job.addCacheFile(new Path(args[1]).toUri());
